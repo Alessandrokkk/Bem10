@@ -1,90 +1,261 @@
--- Wastelane Hack [Completão] - por ChatGPT
+-- Wastelane Hack [COMPLETÃO] - por ChatGPT
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Wastelane Hack [Completão]",
-   LoadingTitle = "Carregando Interface...",
-   ConfigurationSaving = {
-      Enabled = false
-   }
+   Name = "Wastelane Hack [Completo]",
+   LoadingTitle = "Carregando...",
+   ConfigurationSaving = { Enabled = false }
 })
 
--- Abas
-local FarmTab = Window:CreateTab("Auto Farm", nil)
-local CombatTab = Window:CreateTab("Combate", nil)
-local MiscTab = Window:CreateTab("Extras", nil)
+-- ABA: AUTO
+local AutoTab = Window:CreateTab("Auto", nil)
 
--- Auto Farm
-FarmTab:CreateToggle({ Name = "Auto Farm Inimigos", CurrentValue = false, Callback = function(state)
-    getgenv().autoFarm = state
-    while getgenv().autoFarm do
-        for _, enemy in ipairs(workspace:GetDescendants()) do
+AutoTab:CreateToggle({
+   Name = "Auto Farm Inimigos",
+   CurrentValue = false,
+   Callback = function(state)
+      getgenv().autoFarm = state
+      while getgenv().autoFarm do
+         for _, enemy in pairs(workspace:GetDescendants()) do
             if enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and enemy.Name ~= "Player" then
-                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame + Vector3.new(0, 5, 0)
-                wait(0.5)
+               game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame + Vector3.new(0, 5, 0)
+               wait(0.5)
             end
-        end
-        wait()
-    end
-end})
+         end
+         task.wait()
+      end
+   end,
+})
 
--- Kill Aura
-CombatTab:CreateToggle({ Name = "Kill Aura (arma equipada)", CurrentValue = false, Callback = function(state)
-    getgenv().killAura = state
-    while getgenv().killAura do
-        local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
-        if tool then
-            for _, enemy in ipairs(workspace:GetDescendants()) do
-                if enemy:FindFirstChild("Humanoid") and enemy.Name ~= "Player" then
-                    enemy.Humanoid.Health = 0
-                end
+AutoTab:CreateToggle({
+   Name = "Auto Pickup (Itens no chão)",
+   CurrentValue = false,
+   Callback = function(state)
+      getgenv().autoPickup = state
+      while getgenv().autoPickup do
+         for _, item in pairs(workspace:GetDescendants()) do
+            if item:IsA("Tool") and item:FindFirstChild("Handle") then
+               firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, item.Handle, 0)
+               firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, item.Handle, 1)
             end
-        end
-        wait(0.3)
-    end
-end})
+         end
+         wait(0.2)
+      end
+   end,
+})
 
--- God Mode (experimental)
-CombatTab:CreateButton({ Name = "Ativar God Mode (Experimental)", Callback = function()
-    local char = game.Players.LocalPlayer.Character
-    if char and char:FindFirstChild("Humanoid") then
-        char.Humanoid.Name = "1"
-        local clone = char["1"]:Clone()
-        clone.Name = "Humanoid"
-        clone.Parent = char
-        wait(0.5)
-        char["1"]:Destroy()
-    end
-end})
+AutoTab:CreateToggle({
+   Name = "Auto Respawn",
+   CurrentValue = false,
+   Callback = function(state)
+      getgenv().autoRespawn = state
+      local player = game.Players.LocalPlayer
+      player.CharacterAdded:Connect(function()
+         if getgenv().autoRespawn then
+            wait(1)
+            player.Character:MoveTo(Vector3.new(0, 10, 0))
+         end
+      end)
+   end,
+})
 
--- Teleporte para a loja
-MiscTab:CreateButton({ Name = "Teleportar para a Loja", Callback = function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(100, 5, 100)
-end})
+-- ABA: COMBATE
+local CombatTab = Window:CreateTab("Combate", nil)
 
--- Comprar tudo
-MiscTab:CreateButton({ Name = "Comprar Tudo (Magnum, Espingarda...)", Callback = function()
-    local remote = game:GetService("ReplicatedStorage"):FindFirstChild("BuyItem")
-    local itens = {"Magnum", "Espingarda", "Armazém"}
-    if remote then
-        for _, item in ipairs(itens) do
+CombatTab:CreateToggle({
+   Name = "Kill Aura (com arma equipada)",
+   CurrentValue = false,
+   Callback = function(state)
+      getgenv().killAura = state
+      while getgenv().killAura do
+         local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
+         if tool then
+            for _, enemy in pairs(workspace:GetDescendants()) do
+               if enemy:FindFirstChild("Humanoid") and enemy.Name ~= "Player" then
+                  enemy.Humanoid.Health = 0
+               end
+            end
+         end
+         wait(0.3)
+      end
+   end,
+})
+
+CombatTab:CreateToggle({
+   Name = "Aimbot (BETA)",
+   CurrentValue = false,
+   Callback = function(state)
+      getgenv().aimbot = state
+      local camera = workspace.CurrentCamera
+      local plr = game.Players.LocalPlayer
+
+      local function getClosestTarget()
+         local closest, distance = nil, math.huge
+         for _, enemy in pairs(game.Workspace:GetDescendants()) do
+            if enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("Head") then
+               local pos, visible = camera:WorldToViewportPoint(enemy.Head.Position)
+               if visible then
+                  local diff = (Vector2.new(pos.X, pos.Y) - Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)).Magnitude
+                  if diff < distance then
+                     closest = enemy
+                     distance = diff
+                  end
+               end
+            end
+         end
+         return closest
+      end
+
+      game:GetService("RunService").RenderStepped:Connect(function()
+         if getgenv().aimbot then
+            local target = getClosestTarget()
+            if target then
+               camera.CFrame = CFrame.new(camera.CFrame.Position, target.Head.Position)
+            end
+         end
+      end)
+   end
+})
+
+-- ABA: EXTRAS
+local ExtrasTab = Window:CreateTab("Extras", nil)
+
+ExtrasTab:CreateToggle({
+   Name = "ESP Inimigos",
+   CurrentValue = false,
+   Callback = function(state)
+      getgenv().espOn = state
+      while getgenv().espOn do
+         for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:FindFirstChild("Humanoid") and not obj:FindFirstChild("ESP") then
+               local esp = Instance.new("BillboardGui", obj)
+               esp.Name = "ESP"
+               esp.Size = UDim2.new(0, 100, 0, 40)
+               esp.Adornee = obj:FindFirstChild("Head") or obj.PrimaryPart
+               esp.AlwaysOnTop = true
+               local txt = Instance.new("TextLabel", esp)
+               txt.Size = UDim2.new(1, 0, 1, 0)
+               txt.Text = obj.Name
+               txt.BackgroundTransparency = 1
+               txt.TextColor3 = Color3.new(1, 0, 0)
+               txt.TextScaled = true
+            end
+         end
+         wait(1)
+      end
+      for _, obj in pairs(workspace:GetDescendants()) do
+         local esp = obj:FindFirstChild("ESP")
+         if esp then esp:Destroy() end
+      end
+   end
+})
+
+ExtrasTab:CreateToggle({
+   Name = "Anti AFK",
+   CurrentValue = false,
+   Callback = function(state)
+      if state then
+         for _, conn in pairs(getconnections(game.Players.LocalPlayer.Idled)) do
+            conn:Disable()
+         end
+      end
+   end,
+})
+
+ExtrasTab:CreateButton({
+   Name = "Invisibilidade (Experimental)",
+   Callback = function()
+      local char = game.Players.LocalPlayer.Character
+      if char and char:FindFirstChild("HumanoidRootPart") then
+         char.HumanoidRootPart.Transparency = 1
+         for _, p in pairs(char:GetChildren()) do
+            if p:IsA("MeshPart") or p:IsA("Part") then
+               p.Transparency = 1
+            end
+         end
+      end
+   end,
+})
+
+ExtrasTab:CreateButton({
+   Name = "FPS Boost",
+   Callback = function()
+      for _, obj in pairs(game:GetDescendants()) do
+         if obj:IsA("Decal") or obj:IsA("Texture") then
+            obj:Destroy()
+         elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
+            obj:Destroy()
+         elseif obj:IsA("SpotLight") or obj:IsA("SurfaceLight") or obj:IsA("PointLight") then
+            obj:Destroy()
+         end
+      end
+      game.Lighting.GlobalShadows = false
+      game.Lighting.FogEnd = 1e10
+      game.Lighting.Brightness = 0
+   end,
+})
+
+-- ABA: UTILITÁRIOS
+local UtilTab = Window:CreateTab("Utilitários", nil)
+
+UtilTab:CreateButton({
+   Name = "Teleportar para Loja",
+   Callback = function()
+      game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(100, 5, 100)
+   end,
+})
+
+UtilTab:CreateButton({
+   Name = "Comprar Tudo",
+   Callback = function()
+      local remote = game:GetService("ReplicatedStorage"):FindFirstChild("BuyItem")
+      local itens = {"Magnum", "Espingarda", "Armazém"}
+      if remote then
+         for _, item in ipairs(itens) do
             remote:FireServer(item)
             wait(0.2)
-        end
-    else
-        warn("RemoteEvent 'BuyItem' não encontrado.")
-    end
-end})
+         end
+      else
+         warn("RemoteEvent 'BuyItem' não encontrado.")
+      end
+   end,
+})
 
--- Speed Hack
-MiscTab:CreateSlider({ Name = "Speed Hack", Range = {16, 100}, Increment = 2, CurrentValue = 16, Callback = function(value)
-    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
-end})
+UtilTab:CreateSlider({
+   Name = "Speed Hack",
+   Range = {16, 100},
+   Increment = 2,
+   CurrentValue = 16,
+   Callback = function(value)
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
+   end,
+})
 
--- Fly (pressione E)
-MiscTab:CreateToggle({ Name = "Fly (pressione E)", CurrentValue = false, Callback = function(state)
-    if state then
-        loadstring(game:HttpGet("https://pastebin.com/raw/Yj8vKMB5"))()
-    end
-end})
+UtilTab:CreateToggle({
+   Name = "Fly (Celular)",
+   CurrentValue = false,
+   Callback = function(state)
+      getgenv().flying = state
+      local player = game.Players.LocalPlayer
+      local char = player.Character or player.CharacterAdded:Wait()
+      local root = char:WaitForChild("HumanoidRootPart")
+
+      local bg = Instance.new("BodyGyro", root)
+      local bv = Instance.new("BodyVelocity", root)
+      bg.P = 9e4
+      bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+      bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+
+      local speed = 50
+
+      while getgenv().flying do
+         bg.CFrame = workspace.CurrentCamera.CFrame
+         bv.Velocity = workspace.CurrentCamera.CFrame.LookVector * speed
+         wait()
+      end
+
+      bg:Destroy()
+      bv:Destroy()
+   end
+})
