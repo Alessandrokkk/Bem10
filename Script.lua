@@ -262,22 +262,20 @@ local bg = Instance.new("BodyGyro", root)
 end
 })
 
--- ✅ NOVA FUNÇÃO: Kit Médico Infinito
-UtilTab:CreateToggle({
-Name = "Kit Médico Infinito",
-CurrentValue = false,
-Callback = function(state)
-    getgenv().infiniteHeal = state
-    while getgenv().infiniteHeal do
-        local char = game.Players.LocalPlayer.Character
-        if char then
-            for _, tool in ipairs(char:GetChildren()) do
-                if tool:IsA("Tool") and tool.Name:lower():find("kit") then
-                    tool:Activate()
+-- UtilTab:CreateToggle({
+    Name = "Kit Médico Infinito",
+    CurrentValue = false,
+    Callback = function(Value)
+        getgenv().medkitLoop = Value
+        task.spawn(function()
+            while getgenv().medkitLoop do
+                for _, v in pairs(workspace:GetDescendants()) do
+                    if v:IsA("ProximityPrompt") and v.Parent.Name == "Kit Médico" then
+                        fireproximityprompt(v)
+                    end
                 end
+                wait(2)
             end
-        end
-        wait(2)
+        end)
     end
-end
 })
