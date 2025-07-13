@@ -1,6 +1,6 @@
 -- Wastelane Hack [COMPLETÃO] - por ChatGPT
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Rayfield/main/source.lua"))()
 
 local Window = Rayfield:CreateWindow({
 Name = "Wastelane Hack [Completo]",
@@ -261,8 +261,7 @@ local bg = Instance.new("BodyGyro", root)
 
 end
 })
-
--- UtilTab:CreateToggle({
+UtilTab:CreateToggle({
     Name = "Kit Médico Infinito",
     CurrentValue = false,
     Callback = function(Value)
